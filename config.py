@@ -170,3 +170,44 @@ N = 168
 # Unit          : hour index
 # Justification : Conventional start-of-day anchor
 T_START = 0
+
+
+# =============================================================================
+# Category E: Solar Geometry and Site Parameters
+# =============================================================================
+
+# Symbol        : phi
+# Description   : Site latitude (Kuala Lumpur)
+# Unit          : degrees (North positive)
+# Justification : Representative Peninsular Malaysia population center
+PHI_LAT = 3.14
+
+# Symbol        : n_0
+# Description   : Day of year at simulation start (mid-April)
+# Unit          : day index (1 = Jan 1)
+# Justification : Annual-average insolation conditions for Malaysia
+DOY_START = 105
+
+# Symbol        : G_sc
+# Description   : Solar constant (extraterrestrial irradiance at mean Earth-Sun distance)
+# Unit          : W/m^2
+# Justification : IAU 2015 value
+G_SC = 1361.0
+
+# Symbol        : tau
+# Description   : Clear-sky atmospheric transmittance at AM=1
+# Unit          : dimensionless
+# Justification : Typical tropical clear-sky value; applied as tau^AM for air-mass dependence
+TAU_ATM = 0.70
+
+# Symbol        : noise_amp
+# Description   : Amplitude of multiplicative cloud-noise term on G(t)
+# Unit          : dimensionless
+# Justification : Matches plan's +/-10% uniform noise representing cloud variability
+G_NOISE = 0.10
+
+# Symbol        : seed
+# Description   : RNG seed for reproducible synthetic inputs
+# Unit          : integer
+# Justification : Ensures identical runs for validation across scenarios
+RNG_SEED = 42
