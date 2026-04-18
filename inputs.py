@@ -75,32 +75,116 @@ def solar_irradiance(t: int, rng: Optional[np.random.Generator] = None) -> float
 
 
 def ambient_temperature(t: int) -> float:
-    """TODO: implement per plan Section 2.2 (diurnal sine, peak at 2 PM)."""
-    raise NotImplementedError
+    """
+    Ambient air temperature T_amb(t) at hour t.
+
+    Diurnal cosine profile centred on T_MEAN with half-amplitude T_SWING and
+    peak at hour T_PEAK_HOUR:
+
+        T_amb(t) = T_mean + T_swing * cos(2*pi * (h - h_peak) / 24)
+
+    Note: the plan document states the formula with sin((h-14)/24), but that
+    expression actually peaks at h=20, contradicting its own "peak at 2 PM"
+    annotation. The cos form above matches the stated physics (max at 14,
+    min 12 h later at 02:00) and the stated range ~24 degC to ~32 degC.
+
+    Parameters
+    ----------
+    t : int
+        Hour index from simulation start.
+
+    Returns
+    -------
+    float
+        Ambient temperature in degC.
+    """
+    h = t % 24
+    return C.T_MEAN + C.T_SWING * math.cos(
+        2.0 * math.pi * (h - C.T_PEAK_HOUR) / 24.0
+    )
 
 
-def load_demand(t: int, weekend: bool = False) -> float:
-    """TODO: implement per plan Section 2.2 (double-Gaussian peaks)."""
-    raise NotImplementedError
+def is_weekend(t: int) -> bool:
+    """Return True if hour t falls on a simulation-weekend day.
+
+    Convention: simulation day 0 is Monday, so day indices 5 and 6 are the
+    weekend by default (see config.WEEKEND_DAYS).
+    """
+    day_index = (t // 24) % 7
+    return day_index in C.WEEKEND_DAYS
+
+
+def load_demand(t: int, weekend: Optional[bool] = None) -> float:
+    """
+    Electrical load demand P_load(t) at hour t.
+
+    Tropical double-peak profile: baseline plus two narrow Gaussians at the
+    morning and evening peak hours (plan Section 2.2):
+
+        P_load(t) = P_base + P_morning * exp(-(h - h_morning)^2 / LOAD_DENOM)
+                           + P_evening * exp(-(h - h_evening)^2 / LOAD_DENOM)
+
+    On weekend days both peak amplitudes are reduced by WEEKEND_REDUCTION.
+
+    Parameters
+    ----------
+    t : int
+        Hour index from simulation start.
+    weekend : bool, optional
+        Override weekend flag. If None, determined from t via is_weekend().
+
+    Returns
+    -------
+    float
+        Load demand in MW.
+    """
+    h = t % 24
+    is_we = is_weekend(t) if weekend is None else weekend
+
+    scale = (1.0 - C.WEEKEND_REDUCTION) if is_we else 1.0
+    p_morning = C.P_MORNING * scale
+    p_evening = C.P_EVENING * scale
+
+    return (
+        C.P_BASE
+        + p_morning * math.exp(-((h - C.P_MORNING_HOUR) ** 2) / C.LOAD_DENOM)
+        + p_evening * math.exp(-((h - C.P_EVENING_HOUR) ** 2) / C.LOAD_DENOM)
+    )
 
 
 def availability_factor(t: int) -> int:
-    """TODO: implement per plan Section 2.1 Category B (binary 1/0, default 1)."""
-    return 1
+    """
+    Binary SMR availability a_SMR(t): 1 when operating, 0 during outage.
+
+    Outage window is defined by config.SMR_OUTAGE_START (hour at which the
+    outage begins) and config.SMR_OUTAGE_DURATION (hours). If SMR_OUTAGE_START
+    is None the reactor is modelled as always available.
+    """
+    start = C.SMR_OUTAGE_START
+    if start is None:
+        return 1
+    end = start + C.SMR_OUTAGE_DURATION
+    return 0 if start <= t < end else 1
 
 
 def generate_inputs(n_steps: int = C.N, seed: int = C.RNG_SEED) -> dict:
     """
     Build all time-varying input arrays for a full simulation run.
 
-    Currently populates only G(t); other fields are zero-filled placeholders
-    until their generator functions are implemented.
+    Returns a dict with numpy arrays of length n_steps:
+      G      : global horizontal irradiance [W/m^2]
+      T_amb  : ambient temperature [degC]
+      P_load : load demand [MW]
+      a_SMR  : binary availability factor
     """
     rng = np.random.default_rng(seed)
     g = np.array([solar_irradiance(t, rng) for t in range(n_steps)])
+    t_amb = np.array([ambient_temperature(t) for t in range(n_steps)])
+    p_load = np.array([load_demand(t) for t in range(n_steps)])
+    a_smr = np.array([availability_factor(t) for t in range(n_steps)], dtype=int)
     return {
         "G": g,
-        "T_amb": np.zeros(n_steps),
-        "P_load": np.zeros(n_steps),
-        "a_SMR": np.ones(n_steps, dtype=int),
+        "T_amb": t_amb,
+        "P_load": p_load,
+        "a_SMR": a_smr,
     }

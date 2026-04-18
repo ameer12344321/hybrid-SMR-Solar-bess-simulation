@@ -138,27 +138,35 @@ distribution for selected days (upgraded cloud model is a later iteration).
 ```
 For each hour t:
   hour_of_day = t mod 24
-  T_amb(t) = T_mean + T_swing × sin(2π × (hour_of_day - 14) / 24)
+  T_amb(t) = T_mean + T_swing × cos(2π × (hour_of_day - h_peak_T) / 24)
 ```
 
-Parameters: T_mean = 28°C, T_swing = 4°C, peak at 2 PM (hour 14).
+Parameters: T_mean = 28°C, T_swing = 4°C, h_peak_T = 14 (peak at 2 PM).
 
-Range: approximately 24°C (pre-dawn) to 32°C (afternoon). Consistent with Peninsular Malaysia.
+Range: 24°C at 02:00 (pre-dawn) to 32°C at 14:00 (afternoon). Consistent with Peninsular Malaysia.
+
+(Note: an earlier draft used `sin((h − 14)/24)`, which numerically peaks at h = 20,
+contradicting the stated "peak at 2 PM". The cos form above is the corrected version.)
 
 #### Load Demand P_load(t)
 
 ```
 For each hour t:
   hour_of_day = t mod 24
-  P_load(t) = P_base + P_morning × exp(-(hour_of_day - 10)² / 4)
-                      + P_evening × exp(-(hour_of_day - 20)² / 4)
+  P_load(t) = P_base + P_morning × exp(-(hour_of_day - h_morning)² / LOAD_DENOM)
+                     + P_evening × exp(-(hour_of_day - h_evening)² / LOAD_DENOM)
 ```
 
-Parameters: P_base = 25 MW, P_morning = 12 MW, P_evening = 15 MW.
+Parameters: P_base = 25 MW, P_morning = 12 MW, P_evening = 15 MW,
+h_morning = 10, h_evening = 20, LOAD_DENOM = 4 h² (σ ≈ 1.4 h, narrow peaks).
 
-This gives a tropical double-peak profile with morning peak ~10 AM and evening peak ~8 PM.
+Tropical double-peak profile: morning commercial peak ~37 MW at 10 AM and
+residential evening peak ~40 MW at 8 PM, falling back to the 25 MW baseload
+overnight.
 
-For weekend: reduce P_morning and P_evening by 15%.
+Weekend handling: days 5 and 6 of the simulation (Saturday, Sunday by convention
+with sim day 0 = Monday) reduce both P_morning and P_evening by 15%. Controlled
+by WEEKEND_DAYS and WEEKEND_REDUCTION in config.py.
 
 ---
 

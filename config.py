@@ -211,3 +211,96 @@ G_NOISE = 0.10
 # Unit          : integer
 # Justification : Ensures identical runs for validation across scenarios
 RNG_SEED = 42
+
+
+# =============================================================================
+# Category F: Ambient Temperature Profile Parameters
+# =============================================================================
+
+# Symbol        : T_mean
+# Description   : Mean ambient temperature (diurnal average)
+# Unit          : degC
+# Justification : Peninsular Malaysia annual average
+T_MEAN = 28.0
+
+# Symbol        : T_swing
+# Description   : Half-amplitude of the diurnal temperature swing
+# Unit          : degC
+# Justification : Typical tropical diurnal range (~8 degC peak-to-trough)
+T_SWING = 4.0
+
+# Symbol        : h_peak_T
+# Description   : Hour of day at which T_amb peaks (afternoon max)
+# Unit          : hour of day (0-23)
+# Justification : Malaysian afternoon peak around 2 PM
+T_PEAK_HOUR = 14
+
+
+# =============================================================================
+# Category G: Load Demand Profile Parameters
+# =============================================================================
+
+# Symbol        : P_base
+# Description   : Baseline load (24-hour floor)
+# Unit          : MW
+# Justification : Residential + always-on commercial baseload
+P_BASE = 25.0
+
+# Symbol        : P_morning
+# Description   : Morning peak amplitude (above baseline)
+# Unit          : MW
+# Justification : Office/commercial startup around 10 AM
+P_MORNING = 12.0
+
+# Symbol        : P_evening
+# Description   : Evening peak amplitude (above baseline)
+# Unit          : MW
+# Justification : Residential evening consumption around 8 PM
+P_EVENING = 15.0
+
+# Symbol        : h_morning
+# Description   : Hour at which morning peak is centred
+# Unit          : hour of day (0-23)
+# Justification : Typical commercial startup
+P_MORNING_HOUR = 10
+
+# Symbol        : h_evening
+# Description   : Hour at which evening peak is centred
+# Unit          : hour of day (0-23)
+# Justification : Typical residential evening peak
+P_EVENING_HOUR = 20
+
+# Symbol        : denom
+# Description   : Denominator of Gaussian peaks exp(-(h-h_peak)^2 / LOAD_DENOM)
+# Unit          : hour^2
+# Justification : Yields sigma = sqrt(2) ~ 1.4 h (sharp peaks per plan)
+LOAD_DENOM = 4.0
+
+# Symbol        : weekend_reduction
+# Description   : Fractional reduction of peak amplitudes on weekend days
+# Unit          : dimensionless
+# Justification : Lower commercial/industrial activity on weekends
+WEEKEND_REDUCTION = 0.15
+
+# Symbol        : weekend_days
+# Description   : Simulation day indices (0 = first day) treated as weekend
+# Unit          : tuple of day indices
+# Justification : Convention: sim day 0 = Monday, so days 5-6 = Sat/Sun
+WEEKEND_DAYS = (5, 6)
+
+
+# =============================================================================
+# Category H: SMR Availability Parameters
+# =============================================================================
+
+# Symbol        : outage_start
+# Description   : Hour index at which a planned SMR outage begins
+# Unit          : hour (None = no outage)
+# Justification : Set to a value to run the outage-resilience scenario
+SMR_OUTAGE_START = None
+
+# Symbol        : outage_duration
+# Description   : Duration of the SMR outage in hours
+# Unit          : hours
+# Justification : Plan suggests 12-24 hour outage test
+SMR_OUTAGE_DURATION = 0
